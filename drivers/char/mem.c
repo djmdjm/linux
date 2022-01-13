@@ -19,6 +19,7 @@
 #include <linux/tty.h>
 #include <linux/capability.h>
 #include <linux/ptrace.h>
+#include <linux/poll.h>
 #include <linux/device.h>
 #include <linux/highmem.h>
 #include <linux/backing-dev.h>
@@ -480,6 +481,12 @@ static ssize_t splice_write_null(struct pipe_inode_info *pipe, struct file *out,
 	return splice_from_pipe(pipe, out, ppos, len, flags, pipe_to_null);
 }
 
+static __poll_t
+poll_null(struct file *file, poll_table *wait)
+{
+	return EPOLLIN|EPOLLRDNORM|EPOLLOUT|EPOLLWRNORM;
+}
+
 static ssize_t read_iter_zero(struct kiocb *iocb, struct iov_iter *iter)
 {
 	size_t written = 0;
@@ -663,6 +670,7 @@ static const struct file_operations null_fops = {
 	.read_iter	= read_iter_null,
 	.write_iter	= write_iter_null,
 	.splice_write	= splice_write_null,
+	.poll		= poll_null,
 };
 
 static const struct file_operations __maybe_unused port_fops = {
